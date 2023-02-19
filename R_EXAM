@@ -1,0 +1,180 @@
+# CODE FOR THE EXAM - Vaia Storm 26th-30th October 2018
+
+# ANALYSIS OF NDVI ALBEDO FCOVER BEFORE AND AFTER VAIA STORM IN NORTHERN EAST ITALY (Dolomites)
+
+
+
+# To read the Copernicus data I have to install a package two packages 
+# I use "" to let R know that the data is external to the program 
+
+# install.packages("ncdf4")
+library(ncdf4)
+
+# install.packages("raster")
+library(raster)
+
+# set the working directory
+setwd("/Volumes/LaCie/Monitoring_2023")
+
+
+### First analysis 
+
+# Upload in R two NDVI images (with 300m resolution): one from August 2018 and the other from August 2019 
+## I'm using "" because data are external to R and I need to import them
+## The Normalized Difference Vegetation Index (NDVI) is an indicator of the greenness of the biomes
+
+August18 <- raster("c_gls_NDVI300_201808010000_GLOBE_PROBAV_V1.0.1.nc")
+August19 <- raster("c_gls_NDVI300_201908010000_GLOBE_PROBAV_V1.0.1.nc")
+
+
+
+## Crop images before plotting to avoid high time computer elaboration on heavy images 
+## Crop on Italian Dolomites 
+
+ext <- c(11,13,46,47)
+August19_dolomites <- crop(August19, ext)
+August18_dolomites <- crop(August18, ext)
+
+
+#First plot
+
+plot(August18_dolomites, main = "NDVI Dolomites August 2018")
+plot(August19_dolomites, main = "NDVI Dolomites August 2019")
+
+
+# Now I want to see the differences between the two time periods
+# Check for differences in NDVI
+
+Dif_NDVI_Aug <- August19_dolomites - August18_dolomites
+
+# Creating a colour palette that highlights negative differences (biomass losses)
+cl <- colorRampPalette(c('red','gold',"white","chartreuse1","darkgreen"))(100)
+
+# Plot the differences
+plot(Dif_NDVI_Aug, col= cl, main = "NDVI Difference Dolomites August 2018-2019")
+
+## The dev.off() function turned out to not be necessary in my case 
+## Didn't use it in the rest of the code
+dev.off()
+
+### Considerations:
+### NDVI changes could be due to factors that aren't related to the Vaia storm
+### Meaning the storm isn't the caus eof the differences in NDVI between the two time periods
+### Other possible explanation: eg. August is a very dry month in Italy
+
+
+
+### Second analysis 
+
+### Let's now check for differences between the week before and after the storm (26-30 Oct. 2018)
+
+October18 <- raster("c_gls_NDVI300_201810110000_GLOBE_PROBAV_V1.0.1.nc")
+November18 <- raster("c_gls_NDVI300_201811010000_GLOBE_PROBAV_V1.0.1.nc")
+
+
+# Crop images before plotting to avoid high time computer elaboration on heavy images 
+# Area of the Italian Dolomites
+
+ext <- c(11,13,46,47)         
+October18_dol <- crop(October18, ext)
+November18_dol <- crop(November18, ext)
+
+# Check for differences in NDVI
+Dif_NDVI_Nov_Oct <- November18_dol - October18_dol
+
+# Creating a colour palette that highlights negative differences (biomass losses)
+cl <- colorRampPalette(c('red','gold',"white","chartreuse1","darkgreen"))(100)
+
+#Plot the differences
+plot(Dif_NDVI_Nov_Oct, col= cl, main = "NDVI Difference Before and After Vaia Storm")
+
+
+###----------------------------------------------------------------------
+
+
+### Third analysis 
+
+### Let's try using ALBEDO instead of NDVI which could also be affected by lower temperature or higher stress
+### Albedo might pick up differences in type of land cover 
+### Eg. more trees vs less trees = higher albedo vs lower albedo
+
+Albedo_Oct18 <- raster("c_gls_ALDH_201810130000_GLOBE_PROBAV_V1.5.1.nc")
+Albedo_Nov18 <- raster("c_gls_ALDH_201811030000_GLOBE_PROBAV_V1.5.1.nc")
+
+# Crop images before plotting to avoid high time computer elaboration on heavy images 
+# Crop on the Italian Dolomites
+
+ext <- c(11,13,46,47)         
+
+Albedo_Oct18_dolomites <- crop(Albedo_Oct18, ext)
+Albedo_Nov18_dolomites <- crop(Albedo_Nov18, ext)
+
+#Check for differences in NDVI
+Dif_AL <- Albedo_Nov18_dolomites - Albedo_Oct18_dolomites
+
+#Creating a colour palette that highlights negative differences (biomass losses)
+Albedo_cl <- colorRampPalette(c('red','grey','black'))(100)
+
+#Plot the differences
+plot(Dif_AL, col= Albedo_cl, main = "Albedo Difference Before and After Vaia Storm")
+
+
+### Considerations: 
+### ALBEDO resolution too low (1 km), image very pixelated
+
+
+###----------------------------------------------------------------------
+
+
+### Fourth Analysis FCOVER between June 2018-2019
+
+### NDVI and Albedo so far haven't proven satisfactory indicators enough
+### Let's try using FCOVER 
+### FCOVER 1 year distance: June 2018 and June 2019
+### FCOVER is the fraction of ground covered by green vegetation 
+
+FCover_June18 <- raster("c_gls_FCOVER300_201806100000_GLOBE_PROBAV_V1.0.1.nc")
+FCover_June19 <- raster("c_gls_FCOVER300_201906100000_GLOBE_PROBAV_V1.0.1.nc")
+
+# Crop images before plotting to avoid high time computer elaboration on heavy images (Choose one of the two options)
+# Crop on the Italian Dolomites
+ext <- c(11,13,46,47)   
+
+FCover_June18_dolomites <- crop(FCover_June18, ext)
+FCover_June19_dolomites <- crop(FCover_June19, ext)
+
+#Check for differences in FCOVER
+Dif_FC <- FCover_June19_dolomites - FCover_June18_dolomites 
+
+#Creating a colour palette that highlights negative differences (biomass losses)
+cl <- colorRampPalette(c('cornsilk1','blanchedalmond','darkgoldenrod3','palegreen1','green3','darkgreen'))(100)
+
+
+#Plot the differences
+plot(Dif_FC, col= cl, main = "FCOVER Difference June 18-19")
+
+
+### Considerations: 
+### Differences are noticeable
+
+
+### Fifth analysis FCOVER between 2017-2018
+
+# Let's look at the difference between Jun2017 and June 2018
+FC_June17 <- raster("c_gls_FCOVER300_201706100000_GLOBE_PROBAV_V1.0.1.nc")
+
+# Crop images before plotting to avoid high time computer elaboration on heavy images (Choose one of the two options)
+# Crop on the Italian Dolomites
+FC_June17_dolomites <- crop(FC_June17, ext)
+
+Dif_FC_18_17 <- FCover_June18_dolomites  - FC_June17_dolomites 
+par(mfrow=c(1,2))
+plot(Dif_FC, col= cl, main="FCOVER JUNE 18-19")
+plot(Dif_FC_18_17, col= cl, main="FCOVER JUNE 17-18")
+par(mfrow=c(1,1))
+
+### Considerations: 
+### This last analysis and comparison gives the best results 
+### In terms of visualization of the effects of the storm but also it's association to it 
+
+
